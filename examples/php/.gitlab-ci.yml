@@ -1,0 +1,45 @@
+image: tanghengzhi/gitlab-deploy
+
+before_script:
+    # Add the private SSH key to the build environment
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+
+stages:
+    - test
+    - deploy
+
+test:
+    stage: test
+    script: echo 'PHP is the best language in the world'
+    only:
+        - master
+
+deploy-dev-and-test:
+    stage: deploy
+    script:
+        # Run git pull
+        - ssh ec2-user@54.223.162.119 sudo git -C /opt/case/woof-go-waybill pull
+        - ssh ec2-user@54.223.162.119 sudo git -C /opt/case/woof-go-waybill-beta pull
+    only:
+        - master
+
+deploy-online-1:
+    stage: deploy
+    script:
+        # Run git pull
+        - ssh ec2-user@54.222.244.71 sudo git -C /opt/case/waybill-service pull
+    when: manual
+    only:
+        - master
+
+deploy-online-2:
+    stage: deploy
+    script:
+        # Run git pull
+        - ssh ec2-user@52.81.109.73 sudo git -C /opt/case/waybill-service pull
+    when: manual
+    only:
+        - master
