@@ -1,0 +1,30 @@
+image: tanghengzhi/gitlab-deploy:java
+
+before_script:
+    # Add the private SSH key to the build environment
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+
+stages:
+    - build
+    - deploy
+
+build:
+    stage: build
+    script:
+        - ./gradlew build
+    artifacts:
+        paths:
+          - build/libs/*.jar
+    only:
+        - master
+
+deploy-dev:
+    stage: deploy
+    script:
+        - rsync build/libs/*.jar ec2-user@54.223.162.119:/opt/case/waybill-service/build/libs/
+        - ssh ec2-user@54.223.162.119 sudo service waybill-service restart
+    only:
+        - master
